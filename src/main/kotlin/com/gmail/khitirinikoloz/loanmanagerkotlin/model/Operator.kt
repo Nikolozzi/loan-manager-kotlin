@@ -12,6 +12,7 @@ class Operator(
         @Column(unique = true, length = 11) var personalId: String,
         var firstName: String,
         var lastname: String,
+        var username: String,
         var phoneNumber: String,
         @Column(unique = true) var email: String,
         var password: String
@@ -22,6 +23,7 @@ fun Operator.toDto() = OperatorDto(
         personalId = this.personalId,
         firstName = this.firstName,
         lastName = this.lastname,
+        username = this.username,
         phoneNumber = this.phoneNumber,
         email = this.email,
         password = this.password
