@@ -31,7 +31,7 @@ class LoanApplicationService(private val repository: LoanApplicationRepository) 
     fun getAll(): List<LoanApplicationDto> = repository.findAll().map { it.toDto() }
 
     @Transactional(readOnly = true)
-    fun getAllSorted(direction: String, field: String): List<LoanApplicationDto> {
+    fun getAllSorted(field: String, direction: String): List<LoanApplicationDto> {
         val sortingStrategy = when (direction.toLowerCase()) {
             "asc" -> Sort.Direction.ASC
             else -> Sort.Direction.DESC
