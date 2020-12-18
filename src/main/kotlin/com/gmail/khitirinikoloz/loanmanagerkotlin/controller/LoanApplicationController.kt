@@ -25,6 +25,11 @@ class LoanApplicationController(private val loanApplicationService: LoanApplicat
     fun getAll(@PathVariable("field") field: String, @PathVariable("strategy") strategy: String) =
             ResponseEntity(loanApplicationService.getAllSorted(field, strategy), HttpStatus.OK)
 
+
+    @GetMapping("/client/{id}")
+    fun getAllByClient(@PathVariable("id") id: Long): ResponseEntity<List<LoanApplicationDto>> =
+            ResponseEntity(loanApplicationService.getAllByClientId(id), HttpStatus.OK)
+
     @PutMapping("/{id}")
     fun update(@Valid @RequestBody loanApplicationDto: LoanApplicationDto, @PathVariable("id") id: Long) =
             ResponseEntity(loanApplicationService.update(loanApplicationDto, id), HttpStatus.OK)

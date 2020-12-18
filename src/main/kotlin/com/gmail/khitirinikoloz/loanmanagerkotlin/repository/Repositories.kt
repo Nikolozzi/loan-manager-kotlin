@@ -10,7 +10,9 @@ import org.springframework.stereotype.Repository
 interface ClientRepository : JpaRepository<Client, Long>
 
 @Repository
-interface LoanApplicationRepository : JpaRepository<LoanApplication, Long>
+interface LoanApplicationRepository : JpaRepository<LoanApplication, Long> {
+    fun findAllByClientId(id: Long): List<LoanApplication>
+}
 
 @Repository
 interface OperatorRepository : JpaRepository<Operator, Long>

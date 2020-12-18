@@ -6,7 +6,7 @@ import javax.persistence.*
 
 @Entity
 class LoanApplication(
-        @Id @GeneratedValue var id: Long,
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) var id: Long,
         var amount: Double,
         var term: Long, //months
         var status: LoanStatus?,
@@ -14,7 +14,7 @@ class LoanApplication(
         @JsonIgnore
         @ManyToOne
         @JoinColumn(name = "client_id", nullable = false)
-        var client: Client // ???
+        var client: Client
 )
 
 fun LoanApplication.toDto() = LoanApplicationDto(

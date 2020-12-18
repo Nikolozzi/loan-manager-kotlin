@@ -7,10 +7,12 @@ import javax.persistence.*
 
 @Entity
 class Client(
-        @Id @GeneratedValue var id: Long,
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) var id: Long,
         @Column(unique = true, length = 11) var personalId: String,
         var firstName: String,
         var lastName: String,
+        @Column(unique = true)
+        var username: String,
         @Column(unique = true) var email: String,
         var password: String,
         var birthDate: LocalDate,
@@ -26,6 +28,7 @@ fun Client.toDto() = ClientDto(
         personalId = this.personalId,
         firstName = this.firstName,
         lastName = this.lastName,
+        username = this.username,
         email = this.email,
         password = this.password,
         birthDate = this.birthDate,
