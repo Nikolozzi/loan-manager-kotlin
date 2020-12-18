@@ -8,6 +8,7 @@ import com.gmail.khitirinikoloz.loanmanagerkotlin.model.toDto
 import com.gmail.khitirinikoloz.loanmanagerkotlin.repository.LoanApplicationRepository
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.concurrent.atomic.AtomicInteger
@@ -40,6 +41,10 @@ class LoanApplicationService(private val repository: LoanApplicationRepository) 
         return repository.findAll(Sort.by(sortingStrategy, field)).map { it.toDto() }
     }
 
+    @Transactional(readOnly = true)
+    @PreAuthorize("@userSecurity.hasUserId(#id)")
+    fun getAllByClientId(id: Long) = repository.findAllByClientId(id).map { it.toDto() }
+
     @Transactional
     fun update(loanApplicationDto: LoanApplicationDto, id: Long): LoanApplicationDto {
         repository.findByIdOrNull(id) ?: throw EntityNotFoundException("Loan application not found for given id: $id")
@@ -52,7 +57,6 @@ class LoanApplicationService(private val repository: LoanApplicationRepository) 
             repository.findByIdOrNull(id)
                     ?: throw EntityNotFoundException("Loan application not found for given id $id")
     )
-
 
     private fun LoanApplication.generateStatus() {
         this.score = getScore()

@@ -7,7 +7,7 @@ import javax.persistence.*
 
 @Entity
 class Client(
-        @Id @GeneratedValue var id: Long,
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) var id: Long,
         @Column(unique = true, length = 11) var personalId: String,
         var firstName: String,
         var lastName: String,

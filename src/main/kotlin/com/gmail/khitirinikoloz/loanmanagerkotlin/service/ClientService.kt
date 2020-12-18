@@ -9,6 +9,7 @@ import com.gmail.khitirinikoloz.loanmanagerkotlin.security.RoleType
 import com.gmail.khitirinikoloz.loanmanagerkotlin.security.User
 import com.gmail.khitirinikoloz.loanmanagerkotlin.security.UserRepository
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -30,6 +31,7 @@ class ClientService(private val repository: ClientRepository, private val userRe
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("@userSecurity.hasUserId(#id)")
     fun getById(id: Long): ClientDto = repository.findByIdOrNull(id)?.toDto()
             ?: throw EntityNotFoundException("Client was not found for the given id: $id")
 
