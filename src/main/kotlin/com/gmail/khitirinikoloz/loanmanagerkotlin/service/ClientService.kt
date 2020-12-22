@@ -1,8 +1,10 @@
 package com.gmail.khitirinikoloz.loanmanagerkotlin.service
 
-import com.gmail.khitirinikoloz.loanmanagerkotlin.dto.ClientDto
-import com.gmail.khitirinikoloz.loanmanagerkotlin.dto.toEntity
-import com.gmail.khitirinikoloz.loanmanagerkotlin.model.toDto
+import com.gmail.khitirinikoloz.loanmanagerkotlin.model.Client
+import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateClientRequest
+import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.toClientEntity
+import com.gmail.khitirinikoloz.loanmanagerkotlin.model.response.ClientResponse
+import com.gmail.khitirinikoloz.loanmanagerkotlin.model.toClientResponse
 import com.gmail.khitirinikoloz.loanmanagerkotlin.repository.ClientRepository
 import com.gmail.khitirinikoloz.loanmanagerkotlin.security.Role
 import com.gmail.khitirinikoloz.loanmanagerkotlin.security.RoleType
@@ -20,21 +22,21 @@ class ClientService(private val repository: ClientRepository, private val userRe
                     private val passwordEncoder: BCryptPasswordEncoder) {
 
     @Transactional
-    fun register(clientDto: ClientDto): ClientDto {
-        clientDto.password = passwordEncoder.encode(clientDto.password)
-        val client = repository.save(clientDto.toEntity())
-        val user = User(username = client.username, password = client.password,
+    fun register(createClientRequest: CreateClientRequest): ClientResponse {
+        val client = createClientRequest.toClientEntity(passwordEncoder.encode(createClientRequest.password))
+        val savedClient = repository.save(client)
+        val user = User(username = savedClient.username, password = savedClient.password,
                 roles = mutableSetOf(Role(type = RoleType.CREATOR)))
 
         userRepository.save(user)
-        return client.toDto()
+        return savedClient.toClientResponse()
     }
 
     @Transactional(readOnly = true)
     @PreAuthorize("@userSecurity.hasUserId(#id)")
-    fun getById(id: Long): ClientDto = repository.findByIdOrNull(id)?.toDto()
+    fun getById(id: Long): ClientResponse = repository.findByIdOrNull(id)?.toClientResponse()
             ?: throw EntityNotFoundException("Client was not found for the given id: $id")
 
     @Transactional(readOnly = true)
-    fun getAll(): List<ClientDto> = repository.findAll().map { it.toDto() }
+    fun findAll(): List<ClientResponse> = repository.findAll().map(Client::toClientResponse)
 }

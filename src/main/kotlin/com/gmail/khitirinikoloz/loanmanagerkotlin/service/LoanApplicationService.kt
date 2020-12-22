@@ -1,55 +1,68 @@
 package com.gmail.khitirinikoloz.loanmanagerkotlin.service
 
-import com.gmail.khitirinikoloz.loanmanagerkotlin.dto.LoanApplicationDto
-import com.gmail.khitirinikoloz.loanmanagerkotlin.dto.toEntity
+import com.gmail.khitirinikoloz.loanmanagerkotlin.model.Client
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.LoanApplication
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.LoanStatus
-import com.gmail.khitirinikoloz.loanmanagerkotlin.model.toDto
+import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateLoanApplicationRequest
+import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.UpdateLoanApplicationRequest
+import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.toLoanApplicationEntity
+import com.gmail.khitirinikoloz.loanmanagerkotlin.model.response.LoanApplicationResponse
+import com.gmail.khitirinikoloz.loanmanagerkotlin.model.toLoanApplicationResponse
+import com.gmail.khitirinikoloz.loanmanagerkotlin.repository.ClientRepository
 import com.gmail.khitirinikoloz.loanmanagerkotlin.repository.LoanApplicationRepository
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.util.concurrent.atomic.AtomicInteger
 import javax.persistence.EntityNotFoundException
 
 @Service
-class LoanApplicationService(private val repository: LoanApplicationRepository) {
+class LoanApplicationService(private val repository: LoanApplicationRepository, private val clientRepository: ClientRepository) {
 
     @Transactional
-    fun register(loanApplicationDto: LoanApplicationDto): LoanApplicationDto {
-        val application = loanApplicationDto.toEntity()
-        application.generateStatus()
-        return repository.save(application).toDto()
+    fun register(createLoanApplicationRequest: CreateLoanApplicationRequest): LoanApplicationResponse {
+        val client = clientRepository.findByIdOrNull(createLoanApplicationRequest.clientId)
+                ?: throw EntityNotFoundException("Could not create loan. Client does not exist")
+
+        val application = createLoanApplicationRequest.toLoanApplicationEntity(client)
+        application.score = generateScore(application.client)
+        application.status = generateStatus(checkNotNull(application.score))
+        return repository.save(application).toLoanApplicationResponse()
     }
 
     @Transactional(readOnly = true)
-    fun get(id: Long) = repository.findByIdOrNull(id)?.toDto()
+    fun get(id: Long) = repository.findByIdOrNull(id)?.toLoanApplicationResponse()
             ?: throw EntityNotFoundException("Loan application not found for given id: $id")
 
     @Transactional(readOnly = true)
-    fun getAll(): List<LoanApplicationDto> = repository.findAll().map { it.toDto() }
-
-    @Transactional(readOnly = true)
-    fun getAllSorted(field: String, direction: String): List<LoanApplicationDto> {
-        val sortingStrategy = when (direction.toLowerCase()) {
+    fun findAll(field: String?, sort: String?): List<LoanApplicationResponse> {
+        val sortingStrategy = when (sort?.toLowerCase()) {
             "asc" -> Sort.Direction.ASC
             else -> Sort.Direction.DESC
         }
 
-        return repository.findAll(Sort.by(sortingStrategy, field)).map { it.toDto() }
+        val sortingField = field ?: "amount"
+        return repository.findAll(Sort.by(sortingStrategy, sortingField))
+                .map(LoanApplication::toLoanApplicationResponse)
     }
 
     @Transactional(readOnly = true)
     @PreAuthorize("@userSecurity.hasUserId(#id)")
-    fun getAllByClientId(id: Long) = repository.findAllByClientId(id).map { it.toDto() }
+    fun findAllByClientId(id: Long) = repository.findAllByClientId(id).map(LoanApplication::toLoanApplicationResponse)
+
 
     @Transactional
-    fun update(loanApplicationDto: LoanApplicationDto, id: Long): LoanApplicationDto {
-        repository.findByIdOrNull(id) ?: throw EntityNotFoundException("Loan application not found for given id: $id")
-        loanApplicationDto.id = id
-        return repository.save(loanApplicationDto.toEntity()).toDto()
+    fun update(id: Long, updateLoanApplicationRequest: UpdateLoanApplicationRequest) {
+        val loanToUpdate = repository.findByIdOrNull(id)
+                ?: throw EntityNotFoundException("Could not update. Loan does not exist")
+
+        updateLoanApplicationRequest.score?.let { loanToUpdate.score = it }
+        updateLoanApplicationRequest.status?.let { loanToUpdate.status = it }
+
+        repository.save(loanToUpdate)
     }
 
     @Transactional
@@ -58,21 +71,24 @@ class LoanApplicationService(private val repository: LoanApplicationRepository) 
                     ?: throw EntityNotFoundException("Loan application not found for given id $id")
     )
 
-    private fun LoanApplication.generateStatus() {
-        this.score = getScore()
-        status = when {
-            score!! < 2500 -> LoanStatus.REJECTED
-            score!! > 3500 -> LoanStatus.APPROVED
+    private fun generateStatus(score: BigDecimal): LoanStatus {
+        return when {
+            score < BigDecimal.valueOf(2500) -> LoanStatus.REJECTED
+            score > BigDecimal.valueOf(3500) -> LoanStatus.APPROVED
             else -> LoanStatus.MANUAL
         }
     }
 
-    private fun LoanApplication.getScore(): Double {
+    private fun generateScore(client: Client): BigDecimal {
         val index = AtomicInteger(1)
         val alphabet = ('a'..'z').associateWith { index.getAndIncrement() }
         val nameCharsSum = client.firstName.toLowerCase().sumBy { alphabet[it] ?: 0 }
 
-        return nameCharsSum + client.salary * 1.5 - client.liability * 3 +
-                client.birthDate.year - client.birthDate.monthValue - client.birthDate.dayOfYear
+        return BigDecimal.valueOf(nameCharsSum.toLong()) +
+                client.salary * BigDecimal.valueOf(1.5) -
+                client.liability * BigDecimal.valueOf(3) +
+                BigDecimal.valueOf(client.birthDate.year.toLong()) -
+                BigDecimal.valueOf(client.birthDate.monthValue.toLong()) -
+                BigDecimal.valueOf(client.birthDate.dayOfYear.toLong())
     }
 }

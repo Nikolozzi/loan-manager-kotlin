@@ -56,7 +56,7 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
                 .hasAnyAuthority(RoleType.CREATOR.toString(), RoleType.EDITOR.toString())
                 .antMatchers(HttpMethod.GET, "/**").hasAuthority(RoleType.EDITOR.toString())
                 .antMatchers(HttpMethod.DELETE, "/loans/**").hasAuthority(RoleType.EDITOR.toString())
-                .antMatchers(HttpMethod.PUT, "/loans/**").hasAuthority(RoleType.EDITOR.toString())
+                .antMatchers(HttpMethod.PATCH, "/loans/**").hasAuthority(RoleType.EDITOR.toString())
                 .and()
                 .csrf().disable()
                 .formLogin().disable()

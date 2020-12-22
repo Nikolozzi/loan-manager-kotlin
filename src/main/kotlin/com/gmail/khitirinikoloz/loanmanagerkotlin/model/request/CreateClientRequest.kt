@@ -1,36 +1,31 @@
-package com.gmail.khitirinikoloz.loanmanagerkotlin.dto
+package com.gmail.khitirinikoloz.loanmanagerkotlin.model.request
 
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.Client
+import java.math.BigDecimal
 import java.time.LocalDate
-import javax.validation.constraints.NotNull
 
-data class ClientDto(
-        val id: Long,
+data class CreateClientRequest(
         val personalId: String,
         val firstName: String,
         val lastName: String,
         val username: String,
         val email: String,
-        var password: String,
+        val password: String,
         val birthDate: LocalDate,
         val employer: String,
-        @field:NotNull
-        val salary: Double?,
-        @field:NotNull
-        val liability: Double?,
-        val loans: MutableList<LoanApplicationDto>? = mutableListOf()
+        val salary: BigDecimal,
+        val liability: BigDecimal
 )
 
-fun ClientDto.toEntity() = Client(
-        id = this.id,
+fun CreateClientRequest.toClientEntity(encodedPassword: String) = Client(
         personalId = this.personalId,
         firstName = this.firstName,
         lastName = this.lastName,
         username = this.username,
         email = this.email,
-        password = this.password,
+        password = encodedPassword,
         birthDate = this.birthDate,
         employer = this.employer,
-        salary = this.salary!!,
-        liability = this.liability!!
+        salary = this.salary,
+        liability = this.liability
 )
