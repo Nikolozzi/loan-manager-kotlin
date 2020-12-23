@@ -1,27 +1,28 @@
 package com.gmail.khitirinikoloz.loanmanagerkotlin.model
 
-import com.gmail.khitirinikoloz.loanmanagerkotlin.dto.OperatorDto
+import com.gmail.khitirinikoloz.loanmanagerkotlin.model.response.OperatorResponse
 import javax.persistence.*
 
 @Entity
 class Operator(
-        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) var id: Long,
-        @Column(unique = true, length = 11) var personalId: String,
-        var firstName: String,
-        var lastName: String,
-        var username: String,
-        var phoneNumber: String,
-        @Column(unique = true) var email: String,
-        var password: String
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+        val id: Long = 0,
+        @Column(unique = true, length = 11)
+        val personalId: String,
+        val firstName: String,
+        val lastName: String,
+        val username: String,
+        val phoneNumber: String,
+        @Column(unique = true)
+        val email: String,
+        val password: String
 )
 
-fun Operator.toDto() = OperatorDto(
+fun Operator.toOperatorResponse() = OperatorResponse(
         id = this.id,
-        personalId = this.personalId,
         firstName = this.firstName,
         lastName = this.lastName,
         username = this.username,
         phoneNumber = this.phoneNumber,
         email = this.email,
-        password = this.password
 )
