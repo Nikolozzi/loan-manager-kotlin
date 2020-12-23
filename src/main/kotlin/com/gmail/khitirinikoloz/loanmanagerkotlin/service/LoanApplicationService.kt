@@ -12,7 +12,6 @@ import com.gmail.khitirinikoloz.loanmanagerkotlin.repository.ClientRepository
 import com.gmail.khitirinikoloz.loanmanagerkotlin.repository.LoanApplicationRepository
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -50,9 +49,7 @@ class LoanApplicationService(private val repository: LoanApplicationRepository, 
     }
 
     @Transactional(readOnly = true)
-    @PreAuthorize("@userSecurity.hasUserId(#id)")
     fun findAllByClientId(id: Long) = repository.findAllByClientId(id).map(LoanApplication::toLoanApplicationResponse)
-
 
     @Transactional
     fun update(id: Long, updateLoanApplicationRequest: UpdateLoanApplicationRequest) {

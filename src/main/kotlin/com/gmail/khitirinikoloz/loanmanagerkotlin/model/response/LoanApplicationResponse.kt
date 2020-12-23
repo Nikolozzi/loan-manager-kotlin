@@ -3,7 +3,7 @@ package com.gmail.khitirinikoloz.loanmanagerkotlin.model.response
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.LoanStatus
 import java.math.BigDecimal
 
-data class LoanApplicationResponse (
+data class LoanApplicationResponse(
         val id: Long,
         val amount: BigDecimal,
         val termInMonths: Long,

@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface UserRepository : JpaRepository<User, Int> {
+interface LoanUserRepository : JpaRepository<LoanUserDetails, Int> {
 
-    fun getUserByUsername(username: String?): User?
+    fun getLoanUSerDetailsByLoanUsername(username: String?): LoanUserDetails?
 }
