@@ -1,4 +1,4 @@
-package com.gmail.khitirinikoloz.loanmanagerkotlin
+package com.gmail.khitirinikoloz.loanmanagerkotlin.controller
 
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateClientRequest
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateOperatorRequest
@@ -30,6 +30,8 @@ class ClientControllerIntegrationTest(@Autowired private val restTemplate: TestR
                 lastName = "clientLastName", username = "clientUsername", "clientEmail@test.com",
                 password = "clientPassword", birthDate = LocalDate.of(1995, 3, 10),
                 employer = "clientEmployer", salary = BigDecimal.valueOf(5000), liability = BigDecimal.valueOf(500))
+
+        const val CLIENT_REGISTRATION_URL = "/client/registration"
     }
 
     @BeforeEach
@@ -41,19 +43,19 @@ class ClientControllerIntegrationTest(@Autowired private val restTemplate: TestR
     }
 
     @Test
-    fun `Create a new client`() {
-        val response = restTemplate.postForEntity("/client/registration", clientRequest, ClientResponse::class.java)
+    fun `Create a new client and assert that response matches to request`() {
+        val response = restTemplate.postForEntity(CLIENT_REGISTRATION_URL, clientRequest, ClientResponse::class.java)
 
         assertThat(response).isNotNull
         assertThat(response.statusCode).isEqualTo(HttpStatus.CREATED)
         val responseBody = response.body
         assertThat(responseBody).isNotNull
-        assertAllFields(responseBody)
+        responseBody?.let { TestHelper.assertAllClientFields(it, clientRequest) }
     }
 
     @Test
-    fun `Fetch an already existing client`() {
-        val existingClient = restTemplate.postForEntity("/client/registration",
+    fun `Fetch an already existing client and assert that response object matches to the client`() {
+        val existingClient = restTemplate.postForEntity(CLIENT_REGISTRATION_URL,
                 clientRequest, ClientResponse::class.java).body
 
         val response = restTemplate.withBasicAuth(clientRequest.username, clientRequest.password)
@@ -62,60 +64,43 @@ class ClientControllerIntegrationTest(@Autowired private val restTemplate: TestR
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
         val responseBody = response.body
         assertThat(responseBody).isNotNull
-        assertAllFields(responseBody)
+        responseBody?.let { TestHelper.assertAllClientFields(it, clientRequest) }
     }
 
     @Test
-    fun `Fetch a non-existing client`() {
-        restTemplate.postForEntity("/client/registration", clientRequest, ClientResponse::class.java).body
-
-        val invalidClientId = 100
+    fun `Fetch a non-existing client and assert that the response status code is equal to 404`() {
+        val nonExistingClientId = 100
         val response = restTemplate.withBasicAuth(operatorRequest.username, operatorRequest.password)
-                .getForEntity("/client/$invalidClientId", Object::class.java)
+                .getForEntity("/client/$nonExistingClientId", Object::class.java)
         assertThat(response).isNotNull
         assertThat(response.statusCode).isEqualTo(HttpStatus.NOT_FOUND)
     }
 
     @Test
-    fun `Fetch an existing client with wrong credentials`() {
-        val clientResponse =
-                restTemplate.postForEntity("/client/registration", clientRequest, ClientResponse::class.java).body
-
+    fun `Fetch a client with wrong credentials and assert that the response status code is equal to 401`() {
         val invalidUsername = "invalidUsername"
         val invalidPassword = "invalidPassword"
+        val invalidId = 100
+
         val response = restTemplate.withBasicAuth(invalidUsername, invalidPassword)
-                .getForEntity("/client/${clientResponse?.id}", Object::class.java)
+                .getForEntity("/client/$invalidId", Object::class.java)
         assertThat(response).isNotNull
         assertThat(response.statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
     }
 
     @Test
-    fun `Fetch all clients`() {
-        restTemplate.postForEntity("/client/registration", clientRequest, ClientResponse::class.java)
+    fun `Fetch all clients and assert that response size equals total number of clients`() {
+        restTemplate.postForEntity(CLIENT_REGISTRATION_URL, clientRequest, ClientResponse::class.java)
         val anotherClientRequest = CreateClientRequest(personalId = "22222222222", firstName = "anotherClientFirstName",
                 lastName = "anotherClientLastName", username = "anotherClientUsername", "anotherClientEmail@test.com",
                 password = "anotherClientPassword", birthDate = LocalDate.of(1995, 3, 10),
                 employer = "anotherClientEmployer", salary = BigDecimal.valueOf(5000), liability = BigDecimal.valueOf(500))
 
-        restTemplate.postForEntity("/client/registration", anotherClientRequest, ClientResponse::class.java)
-
-        val response = restTemplate.withBasicAuth(operatorRequest.username, operatorRequest.password)
-                .exchange("/client/", HttpMethod.GET, null, object : ParameterizedTypeReference<List<ClientResponse>>() {})
-
+        restTemplate.postForEntity(CLIENT_REGISTRATION_URL, anotherClientRequest, ClientResponse::class.java)
+        val response = restTemplate.withBasicAuth(operatorRequest.username, operatorRequest.password).exchange("/client/",
+                HttpMethod.GET, null, object : ParameterizedTypeReference<List<ClientResponse>>() {})
         assertThat(response).isNotNull
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(response.body?.size).isEqualTo(2)
-    }
-
-    private fun assertAllFields(clientResponse: ClientResponse?) {
-        assertThat(clientResponse?.firstName).isEqualTo(clientRequest.firstName)
-        assertThat(clientResponse?.lastName).isEqualTo(clientRequest.lastName)
-        assertThat(clientResponse?.firstName).isEqualTo(clientRequest.firstName)
-        assertThat(clientResponse?.username).isEqualTo(clientRequest.username)
-        assertThat(clientResponse?.email).isEqualTo(clientRequest.email)
-        assertThat(clientResponse?.birthDate).isEqualTo(clientRequest.birthDate)
-        assertThat(clientResponse?.employer).isEqualTo(clientRequest.employer)
-        assertThat(clientResponse?.salary?.compareTo(clientRequest.salary)).isEqualTo(0)
-        assertThat(clientResponse?.liability?.compareTo(clientRequest.liability)).isEqualTo(0)
     }
 }
