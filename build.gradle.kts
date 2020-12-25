@@ -27,6 +27,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
 	implementation("org.modelmapper:modelmapper:2.3.2")
+	implementation("org.apache.httpcomponents:httpclient:4.5.13")
 	
 	runtimeOnly("com.h2database:h2")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
