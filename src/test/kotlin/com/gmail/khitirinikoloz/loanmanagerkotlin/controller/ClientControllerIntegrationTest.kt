@@ -1,6 +1,7 @@
 package com.gmail.khitirinikoloz.loanmanagerkotlin.controller
 
-import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateClientRequest
+import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper
+import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper.assertAllClientFields
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateOperatorRequest
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.response.ClientResponse
 import com.gmail.khitirinikoloz.loanmanagerkotlin.service.OperatorService
@@ -14,31 +15,22 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.annotation.DirtiesContext
-import java.math.BigDecimal
-import java.time.LocalDate
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class ClientControllerIntegrationTest(@Autowired private val restTemplate: TestRestTemplate) {
+class ClientControllerIntegrationTest(@Autowired private val restTemplate: TestRestTemplate,
+                                      @Autowired private val operatorService: OperatorService) {
 
-    @Autowired
-    lateinit var operatorService: OperatorService
     lateinit var operatorRequest: CreateOperatorRequest
 
     companion object {
-        val clientRequest = CreateClientRequest(personalId = "11111111111", firstName = "clientFirstName",
-                lastName = "clientLastName", username = "clientUsername", "clientEmail@test.com",
-                password = "clientPassword", birthDate = LocalDate.of(1995, 3, 10),
-                employer = "clientEmployer", salary = BigDecimal.valueOf(5000), liability = BigDecimal.valueOf(500))
-
+        val clientRequest = TestHelper.createClientRequests.first
         const val CLIENT_REGISTRATION_URL = "/client/registration"
     }
 
     @BeforeEach
     fun setup() {
-        operatorRequest = CreateOperatorRequest(personalId = "22222222222", firstName = "operatorFirstName",
-                lastName = "operatorLastName", username = "operatorUsername", email = "operatorEmail",
-                password = "operatorPassword", phoneNumber = "operatorNumber")
+        operatorRequest = TestHelper.createOperatorRequests.first
         operatorService.register(operatorRequest)
     }
 
@@ -50,7 +42,7 @@ class ClientControllerIntegrationTest(@Autowired private val restTemplate: TestR
         assertThat(response.statusCode).isEqualTo(HttpStatus.CREATED)
         val responseBody = response.body
         assertThat(responseBody).isNotNull
-        responseBody?.let { TestHelper.assertAllClientFields(it, clientRequest) }
+        responseBody?.let { assertAllClientFields(it, clientRequest) }
     }
 
     @Test
@@ -64,7 +56,7 @@ class ClientControllerIntegrationTest(@Autowired private val restTemplate: TestR
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
         val responseBody = response.body
         assertThat(responseBody).isNotNull
-        responseBody?.let { TestHelper.assertAllClientFields(it, clientRequest) }
+        responseBody?.let { assertAllClientFields(it, clientRequest) }
     }
 
     @Test
@@ -91,10 +83,7 @@ class ClientControllerIntegrationTest(@Autowired private val restTemplate: TestR
     @Test
     fun `Fetch all clients and assert that response size equals total number of clients`() {
         restTemplate.postForEntity(CLIENT_REGISTRATION_URL, clientRequest, ClientResponse::class.java)
-        val anotherClientRequest = CreateClientRequest(personalId = "22222222222", firstName = "anotherClientFirstName",
-                lastName = "anotherClientLastName", username = "anotherClientUsername", "anotherClientEmail@test.com",
-                password = "anotherClientPassword", birthDate = LocalDate.of(1995, 3, 10),
-                employer = "anotherClientEmployer", salary = BigDecimal.valueOf(5000), liability = BigDecimal.valueOf(500))
+        val anotherClientRequest = TestHelper.createClientRequests.second
 
         restTemplate.postForEntity(CLIENT_REGISTRATION_URL, anotherClientRequest, ClientResponse::class.java)
         val response = restTemplate.withBasicAuth(operatorRequest.username, operatorRequest.password).exchange("/client/",

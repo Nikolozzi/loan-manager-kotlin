@@ -1,5 +1,7 @@
 package com.gmail.khitirinikoloz.loanmanagerkotlin.controller
 
+import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper
+import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper.assertAllLoanApplicationFields
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.LoanStatus
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateClientRequest
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateLoanApplicationRequest
@@ -20,7 +22,6 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.annotation.DirtiesContext
 import java.math.BigDecimal
-import java.time.LocalDate
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -35,18 +36,12 @@ class LoanApplicationControllerIntegrationTest(@Autowired private val restTempla
 
     @BeforeEach
     fun setup() {
-        clientRequest = CreateClientRequest(personalId = "11111111111", firstName = "clientFirstName",
-                lastName = "clientLastName", username = "clientUsername", "clientEmail@test.com",
-                password = "clientPassword", birthDate = LocalDate.of(1995, 3, 10),
-                employer = "clientEmployer", salary = BigDecimal.valueOf(5000), liability = BigDecimal.valueOf(500))
-
+        clientRequest = TestHelper.createClientRequests.first
         clientResponse = clientService.register(clientRequest)
         loanApplicationRequest = CreateLoanApplicationRequest(amount = BigDecimal.valueOf(6000),
                 termInMonths = 5, clientId = clientResponse.id)
 
-        operatorRequest = CreateOperatorRequest(personalId = "11111111111", firstName = "operatorFirstName",
-                lastName = "operatorLastName", email = "operatorEmail", username = "operatorUsername",
-                password = "operatorPassword", phoneNumber = "operatorNumber")
+        operatorRequest = TestHelper.createOperatorRequests.first
         operatorService.register(operatorRequest)
     }
 
@@ -59,7 +54,7 @@ class LoanApplicationControllerIntegrationTest(@Autowired private val restTempla
         assertThat(response.statusCode).isEqualTo(HttpStatus.CREATED)
         val responseBody = response.body
         assertThat(responseBody).isNotNull
-        responseBody?.let(this::assertAllFields)
+        responseBody?.let { assertAllLoanApplicationFields(responseBody, loanApplicationRequest, clientRequest) }
     }
 
     @Test
@@ -73,7 +68,7 @@ class LoanApplicationControllerIntegrationTest(@Autowired private val restTempla
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
         val responseBody = response.body
         assertThat(responseBody).isNotNull
-        responseBody?.let(this::assertAllFields)
+        responseBody?.let { assertAllLoanApplicationFields(responseBody, loanApplicationRequest, clientRequest) }
     }
 
     @Test
@@ -133,7 +128,6 @@ class LoanApplicationControllerIntegrationTest(@Autowired private val restTempla
 
         val updatedLoanApplication = restTemplate.withBasicAuth(operatorRequest.username, operatorRequest.password)
                 .getForEntity("/loans/${existingLoan?.id}", LoanApplicationResponse::class.java).body
-
         assertThat(updatedLoanApplication?.status).isEqualTo(loanUpdateRequest.status)
         assertThat(updatedLoanApplication?.score?.compareTo(loanUpdateRequest.score)).isEqualTo(0)
     }
@@ -154,14 +148,5 @@ class LoanApplicationControllerIntegrationTest(@Autowired private val restTempla
                 .exchange("/loans/", HttpMethod.GET, null,
                         object : ParameterizedTypeReference<List<LoanApplicationResponse>>() {}).body
         assertThat(loanApplicationsAfterDeletion?.size).isEqualTo(0)
-    }
-
-    private fun assertAllFields(responseBody: LoanApplicationResponse) {
-        TestHelper.assertAllClientFields(responseBody.client, clientRequest)
-        assertThat(responseBody.amount.compareTo(loanApplicationRequest.amount)).isEqualTo(0)
-        assertThat(responseBody.termInMonths).isEqualTo(loanApplicationRequest.termInMonths)
-        assertThat(responseBody.id).isNotNull
-        assertThat(responseBody.status).isInstanceOf(LoanStatus::class.java)
-        assertThat(responseBody.score).isNotNull
     }
 }

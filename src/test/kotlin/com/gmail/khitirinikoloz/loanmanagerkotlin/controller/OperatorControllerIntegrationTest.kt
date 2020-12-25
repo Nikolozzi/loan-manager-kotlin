@@ -1,6 +1,7 @@
 package com.gmail.khitirinikoloz.loanmanagerkotlin.controller
 
-import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateOperatorRequest
+import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper
+import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper.assertAllOperatorFields
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.response.OperatorResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -17,10 +18,7 @@ import org.springframework.test.annotation.DirtiesContext
 class OperatorControllerIntegrationTest(@Autowired private val restTemplate: TestRestTemplate) {
 
     companion object {
-        val operatorRequest = CreateOperatorRequest(personalId = "11111111111", firstName = "operatorFirstName",
-                lastName = "operatorLastName", email = "operatorEmail", username = "operatorUsername",
-                password = "operatorPassword", phoneNumber = "operatorNumber")
-
+        val operatorRequest = TestHelper.createOperatorRequests.first
         const val OPERATOR_REGISTRATION_URL = "/operator/registration"
     }
 
@@ -32,7 +30,7 @@ class OperatorControllerIntegrationTest(@Autowired private val restTemplate: Tes
         assertThat(response.statusCode).isEqualTo(HttpStatus.CREATED)
         val responseBody = response.body
         assertThat(responseBody).isNotNull
-        responseBody?.let(this::assertAllFields)
+        responseBody?.let { assertAllOperatorFields(responseBody, operatorRequest) }
     }
 
     @Test
@@ -46,7 +44,7 @@ class OperatorControllerIntegrationTest(@Autowired private val restTemplate: Tes
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
         val responseBody = response.body
         assertThat(responseBody).isNotNull
-        responseBody?.let(this::assertAllFields)
+        responseBody?.let { assertAllOperatorFields(responseBody, operatorRequest) }
     }
 
     @Test
@@ -75,9 +73,7 @@ class OperatorControllerIntegrationTest(@Autowired private val restTemplate: Tes
     @Test
     fun `Fetch all operators and assert that response size equals total number of operators`() {
         restTemplate.postForEntity(OPERATOR_REGISTRATION_URL, operatorRequest, OperatorResponse::class.java)
-        val anotherOperatorRequest = CreateOperatorRequest(personalId = "22222222222", firstName = "anotherOperatorFirstName",
-                lastName = "anotherOperatorLastName", email = "anotherOperatorEmail", username = "anotherOperatorUsername",
-                password = "anotherOperatorPassword", phoneNumber = "anotherOperatorNumber")
+        val anotherOperatorRequest = TestHelper.createOperatorRequests.second
         restTemplate.postForEntity(OPERATOR_REGISTRATION_URL, anotherOperatorRequest, OperatorResponse::class.java)
 
         val response = restTemplate.withBasicAuth(operatorRequest.username, operatorRequest.password).exchange("/operator/",
@@ -85,13 +81,5 @@ class OperatorControllerIntegrationTest(@Autowired private val restTemplate: Tes
         assertThat(response).isNotNull
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
         assertThat(response.body?.size).isEqualTo(2)
-    }
-
-    private fun assertAllFields(operatorResponse: OperatorResponse) {
-        assertThat(operatorResponse.firstName).isEqualTo(operatorRequest.firstName)
-        assertThat(operatorResponse.lastName).isEqualTo(operatorRequest.lastName)
-        assertThat(operatorResponse.email).isEqualTo(operatorRequest.email)
-        assertThat(operatorResponse.username).isEqualTo(operatorRequest.username)
-        assertThat(operatorResponse.phoneNumber).isEqualTo(operatorRequest.phoneNumber)
     }
 }
