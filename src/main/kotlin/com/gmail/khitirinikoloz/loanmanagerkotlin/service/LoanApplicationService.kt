@@ -10,7 +10,8 @@ import com.gmail.khitirinikoloz.loanmanagerkotlin.model.response.LoanApplication
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.toLoanApplicationResponse
 import com.gmail.khitirinikoloz.loanmanagerkotlin.repository.ClientRepository
 import com.gmail.khitirinikoloz.loanmanagerkotlin.repository.LoanApplicationRepository
-import org.springframework.data.domain.Sort
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -37,16 +38,8 @@ class LoanApplicationService(private val repository: LoanApplicationRepository, 
             ?: throw EntityNotFoundException("Loan application not found for given id: $id")
 
     @Transactional(readOnly = true)
-    fun findAll(field: String?, sort: String?): List<LoanApplicationResponse> {
-        val sortingStrategy = when (sort?.toLowerCase()) {
-            "asc" -> Sort.Direction.ASC
-            else -> Sort.Direction.DESC
-        }
-
-        val sortingField = field ?: "amount"
-        return repository.findAll(Sort.by(sortingStrategy, sortingField))
-                .map(LoanApplication::toLoanApplicationResponse)
-    }
+    fun findAll(pageable: Pageable): Page<LoanApplicationResponse> =
+            repository.findAll(pageable).map(LoanApplication::toLoanApplicationResponse)
 
     @Transactional(readOnly = true)
     fun findAllByClientId(id: Long) = repository.findAllByClientId(id).map(LoanApplication::toLoanApplicationResponse)
