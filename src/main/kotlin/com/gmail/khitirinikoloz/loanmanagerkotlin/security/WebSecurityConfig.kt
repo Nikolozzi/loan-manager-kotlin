@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.builders.WebSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
 class WebSecurityConfig : WebSecurityConfigurerAdapter() {
 
     @Bean
@@ -45,7 +47,7 @@ class WebSecurityConfig : WebSecurityConfigurerAdapter() {
         http.httpBasic()
                 .and().authorizeRequests()
                 .antMatchers(HttpMethod.GET, "/loans/client/{id}", "/client/{id}")
-                .access("(@userSecurity.hasUserId(#id) AND hasAuthority('${RoleType.CREATOR}')) OR hasAuthority('${RoleType.EDITOR}')")
+                .hasAnyAuthority(RoleType.CREATOR.toString(), RoleType.EDITOR.toString())
                 .antMatchers(HttpMethod.POST, "/loans/")
                 .hasAnyAuthority(RoleType.CREATOR.toString(), RoleType.EDITOR.toString())
                 .antMatchers(HttpMethod.DELETE, "/loans/**").hasAuthority(RoleType.EDITOR.toString())

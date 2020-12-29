@@ -1,4 +1,4 @@
-package com.gmail.khitirinikoloz.loanmanagerkotlin
+package com.gmail.khitirinikoloz.loanmanagerkotlin.util
 
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.LoanStatus
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateClientRequest

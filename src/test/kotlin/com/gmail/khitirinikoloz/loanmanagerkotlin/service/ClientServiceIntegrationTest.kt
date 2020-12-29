@@ -1,7 +1,7 @@
 package com.gmail.khitirinikoloz.loanmanagerkotlin.service
 
-import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper
-import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper.assertAllClientFields
+import com.gmail.khitirinikoloz.loanmanagerkotlin.util.TestHelper
+import com.gmail.khitirinikoloz.loanmanagerkotlin.util.TestHelper.assertAllClientFields
 import com.gmail.khitirinikoloz.loanmanagerkotlin.security.LoanUserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -9,6 +9,7 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.annotation.DirtiesContext
 import javax.persistence.EntityNotFoundException
 
@@ -34,6 +35,7 @@ class ClientServiceIntegrationTest(@Autowired private val clientService: ClientS
     }
 
     @Test
+    @WithMockUser(authorities = ["EDITOR", "CREATOR"])
     fun `Fetch an existing client by id and assert that it matches with clientRequest object`() {
         val existingClient = clientService.register(clientRequest)
         val clientResponse = clientService.getById(existingClient.id)
@@ -42,12 +44,14 @@ class ClientServiceIntegrationTest(@Autowired private val clientService: ClientS
     }
 
     @Test
+    @WithMockUser(authorities = ["EDITOR", "CREATOR"])
     fun `Fetch a non-existing client and assert that EntityNotFoundException is thrown`() {
         val nonExistingClientId = 100L
         assertThrows<EntityNotFoundException> { clientService.getById(nonExistingClientId) }
     }
 
     @Test
+    @WithMockUser(authorities = ["EDITOR"])
     fun `Fetch all clients and assert that response size and content matches with all clients`() {
         clientService.register(clientRequest)
         val anotherClientRequest = TestHelper.createClientRequests.second

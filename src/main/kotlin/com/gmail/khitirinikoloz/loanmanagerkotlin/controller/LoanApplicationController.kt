@@ -4,6 +4,8 @@ import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateLoanApplic
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.UpdateLoanApplicationRequest
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.response.LoanApplicationResponse
 import com.gmail.khitirinikoloz.loanmanagerkotlin.service.LoanApplicationService
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -21,8 +23,8 @@ class LoanApplicationController(private val loanApplicationService: LoanApplicat
     fun get(@PathVariable("id") id: Long) = ResponseEntity(loanApplicationService.get(id), HttpStatus.OK)
 
     @GetMapping("/")
-    fun findAll(@RequestParam(required = false) field: String?, @RequestParam(required = false) sort: String?) =
-            ResponseEntity(loanApplicationService.findAll(field, sort), HttpStatus.OK)
+    fun findAll(@PageableDefault(size = 10) pageable: Pageable) =
+            ResponseEntity(loanApplicationService.findAll(pageable), HttpStatus.OK)
 
     @GetMapping("/client/{id}")
     fun findAllByClient(@PathVariable("id") id: Long): ResponseEntity<List<LoanApplicationResponse>> =

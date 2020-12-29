@@ -1,7 +1,7 @@
 package com.gmail.khitirinikoloz.loanmanagerkotlin.controller
 
-import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper
-import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper.assertAllClientFields
+import com.gmail.khitirinikoloz.loanmanagerkotlin.util.TestHelper
+import com.gmail.khitirinikoloz.loanmanagerkotlin.util.TestHelper.assertAllClientFields
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateOperatorRequest
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.response.ClientResponse
 import com.gmail.khitirinikoloz.loanmanagerkotlin.service.OperatorService

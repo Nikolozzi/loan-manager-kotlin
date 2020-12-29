@@ -1,7 +1,7 @@
 package com.gmail.khitirinikoloz.loanmanagerkotlin.controller
 
-import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper
-import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper.assertAllOperatorFields
+import com.gmail.khitirinikoloz.loanmanagerkotlin.util.TestHelper
+import com.gmail.khitirinikoloz.loanmanagerkotlin.util.TestHelper.assertAllOperatorFields
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.response.OperatorResponse
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test

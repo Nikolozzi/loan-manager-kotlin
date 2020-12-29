@@ -1,7 +1,7 @@
 package com.gmail.khitirinikoloz.loanmanagerkotlin.service
 
-import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper
-import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper.assertAllOperatorFields
+import com.gmail.khitirinikoloz.loanmanagerkotlin.util.TestHelper
+import com.gmail.khitirinikoloz.loanmanagerkotlin.util.TestHelper.assertAllOperatorFields
 import com.gmail.khitirinikoloz.loanmanagerkotlin.security.LoanUserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -9,6 +9,7 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.annotation.DirtiesContext
 import javax.persistence.EntityNotFoundException
 
@@ -34,6 +35,7 @@ class OperatorServiceIntegrationTest(@Autowired private val operatorService: Ope
     }
 
     @Test
+    @WithMockUser(authorities = ["EDITOR"])
     fun `Fetch an existing operator by id and assert that it matches with operatorRequest object`() {
         val existingOperator = operatorService.register(operatorRequest)
         val operatorResponse = operatorService.getById(existingOperator.id)
@@ -42,12 +44,14 @@ class OperatorServiceIntegrationTest(@Autowired private val operatorService: Ope
     }
 
     @Test
+    @WithMockUser(authorities = ["EDITOR"])
     fun `Fetch a non-existing operator and assert that EntityNotFoundException is thrown`() {
         val nonExistingOperatorId = 50L
         assertThrows<EntityNotFoundException> { operatorService.getById(nonExistingOperatorId) }
     }
 
     @Test
+    @WithMockUser(authorities = ["EDITOR"])
     fun `Fetch all operators and assert that response size and content matches with all operators`() {
         operatorService.register(operatorRequest)
         val anotherOperatorRequest = TestHelper.createOperatorRequests.second
