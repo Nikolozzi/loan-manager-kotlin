@@ -1,17 +1,19 @@
 package com.gmail.khitirinikoloz.loanmanagerkotlin.service
 
-import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper
-import com.gmail.khitirinikoloz.loanmanagerkotlin.TestHelper.assertAllLoanApplicationFields
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.LoanStatus
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateClientRequest
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateLoanApplicationRequest
 import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.UpdateLoanApplicationRequest
+import com.gmail.khitirinikoloz.loanmanagerkotlin.util.TestHelper
+import com.gmail.khitirinikoloz.loanmanagerkotlin.util.TestHelper.assertAllLoanApplicationFields
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.test.annotation.DirtiesContext
 import java.math.BigDecimal
 import javax.persistence.EntityNotFoundException
@@ -68,15 +70,21 @@ class LoanApplicationServiceIntegrationTest(@Autowired private val loanApplicati
     }
 
     @Test
-    fun `Fetch all loanApplications with default sort strategy and assert that loans are sorted correctly`() {
+    fun `Fetch a single item page in descending order by amount and assert that only max loanApplication is returned`() {
         val loanApplicationResponse = loanApplicationService.register(loanApplicationRequest)
         val anotherLoanApplicationRequest = CreateLoanApplicationRequest(BigDecimal.valueOf(3000),
                 5, loanApplicationResponse.client.id)
         loanApplicationService.register(anotherLoanApplicationRequest)
 
-        val loanApplications = loanApplicationService.findAll(null, null)
-        assertThat(loanApplications.size).isEqualTo(2)
-        assertThat(loanApplications[0].amount.compareTo(loanApplications[1].amount)).isEqualTo(1)
+        val pageSize = 1
+        val pageRequest = PageRequest.of(0, pageSize, Sort.by(Sort.Direction.DESC, "amount"))
+        val pagedLoanApplications = loanApplicationService.findAll(pageRequest)
+
+        assertThat(pagedLoanApplications.size).isEqualTo(pageSize)
+        assertThat(pagedLoanApplications.totalElements).isEqualTo(2)
+        val loanApplications = pagedLoanApplications.content
+        assertThat(loanApplications.size).isEqualTo(1)
+        assertThat(loanApplications.first().amount.compareTo(loanApplicationRequest.amount)).isEqualTo(0)
     }
 
     @Test
@@ -86,8 +94,11 @@ class LoanApplicationServiceIntegrationTest(@Autowired private val loanApplicati
                 5, loanApplicationResponse.client.id)
         loanApplicationService.register(anotherLoanApplicationRequest)
 
-        val loanApplications = loanApplicationService.findAll("termInMonths", "asc")
-        assertThat(loanApplications.size).isEqualTo(2)
+        val pageRequest = PageRequest.of(0, 2, Sort.by(Sort.Direction.ASC, "termInMonths"))
+        val pagedLoanApplications = loanApplicationService.findAll(pageRequest)
+        assertThat(pagedLoanApplications.size).isEqualTo(2)
+        assertThat(pagedLoanApplications.sort.isSorted)
+        val loanApplications = pagedLoanApplications.content
         assertThat(loanApplications[0].termInMonths.compareTo(loanApplications[1].termInMonths)).isEqualTo(-1)
     }
 
@@ -105,11 +116,12 @@ class LoanApplicationServiceIntegrationTest(@Autowired private val loanApplicati
     @Test
     fun `Delete a loanApplication and assert that total number of loanApplications is decreased by 1`() {
         val loanApplicationResponse = loanApplicationService.register(loanApplicationRequest)
-        val loanApplicationsBeforeDeletion = loanApplicationService.findAll(null, null)
+        val pageRequest = PageRequest.of(0, 1, Sort.by(Sort.DEFAULT_DIRECTION, "amount"))
+        val loanApplicationsBeforeDeletion = loanApplicationService.findAll(pageRequest).content
         assertThat(loanApplicationsBeforeDeletion.size).isEqualTo(1)
 
         loanApplicationService.delete(loanApplicationResponse.id)
-        val loanApplicationsAfterDeletion = loanApplicationService.findAll(null, null)
+        val loanApplicationsAfterDeletion = loanApplicationService.findAll(pageRequest).content
         assertThat(loanApplicationsAfterDeletion.size).isEqualTo(0)
     }
 }
