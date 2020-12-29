@@ -4,7 +4,6 @@ import com.gmail.khitirinikoloz.loanmanagerkotlin.model.request.CreateClientRequ
 import com.gmail.khitirinikoloz.loanmanagerkotlin.service.ClientService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -16,7 +15,6 @@ class ClientController(private val clientService: ClientService) {
             ResponseEntity(clientService.register(createClientRequest), HttpStatus.CREATED)
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('EDITOR') OR (hasAuthority('CREATOR') AND @userSecurity.hasUserId(#id))")
     fun get(@PathVariable("id") id: Long) = ResponseEntity(clientService.getById(id), HttpStatus.OK)
 
     @GetMapping("/")

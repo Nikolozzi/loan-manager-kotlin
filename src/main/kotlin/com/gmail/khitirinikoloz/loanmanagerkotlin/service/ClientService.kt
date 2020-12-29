@@ -11,6 +11,7 @@ import com.gmail.khitirinikoloz.loanmanagerkotlin.security.LoanUserRepository
 import com.gmail.khitirinikoloz.loanmanagerkotlin.security.Role
 import com.gmail.khitirinikoloz.loanmanagerkotlin.security.RoleType
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -32,9 +33,11 @@ class ClientService(private val repository: ClientRepository, private val loanUs
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('EDITOR') OR (hasAuthority('CREATOR') AND @userSecurity.hasUserId(#id))")
     fun getById(id: Long): ClientResponse = repository.findByIdOrNull(id)?.toClientResponse()
             ?: throw EntityNotFoundException("Client was not found for the given id: $id")
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('EDITOR')")
     fun findAll(): List<ClientResponse> = repository.findAll().map(Client::toClientResponse)
 }

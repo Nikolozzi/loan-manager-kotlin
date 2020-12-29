@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.annotation.DirtiesContext
 import java.math.BigDecimal
 import javax.persistence.EntityNotFoundException
@@ -49,6 +50,7 @@ class LoanApplicationServiceIntegrationTest(@Autowired private val loanApplicati
     }
 
     @Test
+    @WithMockUser(authorities = ["EDITOR"])
     fun `Fetch a loanApplication by id and assert that response matches the existing application`() {
         val existingLoanApplication = loanApplicationService.register(loanApplicationRequest)
         val loanApplicationResponse = loanApplicationService.get(existingLoanApplication.id)
@@ -57,12 +59,14 @@ class LoanApplicationServiceIntegrationTest(@Autowired private val loanApplicati
     }
 
     @Test
+    @WithMockUser(authorities = ["EDITOR"])
     fun `Fetch a non-existing loanApplication and assert that EntityNotFoundException is thrown`() {
         val nonExistingLoanApplicationId = 1L
         assertThrows<EntityNotFoundException> { loanApplicationService.get(nonExistingLoanApplicationId) }
     }
 
     @Test
+    @WithMockUser(authorities = ["EDITOR", "CREATOR"])
     fun `Fetch all loanApplications for a client and assert that response size equals total loans`() {
         val loanApplicationResponse = loanApplicationService.register(loanApplicationRequest)
         val loanApplications = loanApplicationService.findAllByClientId(loanApplicationResponse.client.id)
@@ -70,6 +74,7 @@ class LoanApplicationServiceIntegrationTest(@Autowired private val loanApplicati
     }
 
     @Test
+    @WithMockUser(authorities = ["EDITOR"])
     fun `Fetch a single item page in descending order by amount and assert that only max loanApplication is returned`() {
         val loanApplicationResponse = loanApplicationService.register(loanApplicationRequest)
         val anotherLoanApplicationRequest = CreateLoanApplicationRequest(BigDecimal.valueOf(3000),
@@ -88,6 +93,7 @@ class LoanApplicationServiceIntegrationTest(@Autowired private val loanApplicati
     }
 
     @Test
+    @WithMockUser(authorities = ["EDITOR"])
     fun `Fetch all loanApplications in ascending order by term and assert that loans are sorted correctly`() {
         val loanApplicationResponse = loanApplicationService.register(loanApplicationRequest)
         val anotherLoanApplicationRequest = CreateLoanApplicationRequest(BigDecimal.valueOf(3000),
@@ -103,6 +109,7 @@ class LoanApplicationServiceIntegrationTest(@Autowired private val loanApplicati
     }
 
     @Test
+    @WithMockUser(authorities = ["EDITOR"])
     fun `Update loanApplication and assert that all fields get updated`() {
         val loanApplicationResponse = loanApplicationService.register(loanApplicationRequest)
         val updateLoanApplicationRequest = UpdateLoanApplicationRequest(LoanStatus.MANUAL, BigDecimal.valueOf(2756.12))
@@ -114,6 +121,7 @@ class LoanApplicationServiceIntegrationTest(@Autowired private val loanApplicati
     }
 
     @Test
+    @WithMockUser(authorities = ["EDITOR"])
     fun `Delete a loanApplication and assert that total number of loanApplications is decreased by 1`() {
         val loanApplicationResponse = loanApplicationService.register(loanApplicationRequest)
         val pageRequest = PageRequest.of(0, 1, Sort.by(Sort.DEFAULT_DIRECTION, "amount"))

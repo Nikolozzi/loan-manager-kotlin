@@ -8,7 +8,6 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import javax.validation.Valid
 
@@ -28,7 +27,6 @@ class LoanApplicationController(private val loanApplicationService: LoanApplicat
             ResponseEntity(loanApplicationService.findAll(pageable), HttpStatus.OK)
 
     @GetMapping("/client/{id}")
-    @PreAuthorize("hasAuthority('EDITOR') OR (hasAuthority('CREATOR') AND @userSecurity.hasUserId(#id))")
     fun findAllByClient(@PathVariable("id") id: Long): ResponseEntity<List<LoanApplicationResponse>> =
             ResponseEntity(loanApplicationService.findAllByClientId(id), HttpStatus.OK)
 
