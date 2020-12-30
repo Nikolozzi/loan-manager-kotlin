@@ -23,8 +23,8 @@ data class LoanUserDetails(
         )
         var roles: MutableSet<Role>
 ) : UserDetails {
-    override fun getAuthorities(): MutableCollection<out GrantedAuthority> =
-            this.roles.map { SimpleGrantedAuthority(it.type.toString()) }.toMutableList()
+    override fun getAuthorities(): Collection<GrantedAuthority> =
+            this.roles.map { SimpleGrantedAuthority(it.type.toString()) }.toSet()
 
     override fun getPassword(): String = this.loanUserPassword
 

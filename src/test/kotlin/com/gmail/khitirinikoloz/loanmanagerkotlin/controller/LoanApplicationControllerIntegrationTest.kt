@@ -63,15 +63,23 @@ class LoanApplicationControllerIntegrationTest(@Autowired private val restTempla
 
     @Test
     fun `Fetch a loan by id with operator credentials and assert that response equals request`() {
+        // given: existing loan
         val existingLoan = restTemplate.withBasicAuth(clientRequest.username, clientRequest.password)
                 .postForEntity("/loans/", loanApplicationRequest, LoanApplicationResponse::class.java).body
 
+        // when: fetching a loan is requested
         val response = restTemplate.withBasicAuth(operatorRequest.username, operatorRequest.password)
                 .getForEntity("/loans/${existingLoan?.id}", LoanApplicationResponse::class.java)
+
+        // then: response is not blank
         assertThat(response).isNotNull
+
+        // and: status is okay
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
         val responseBody = response.body
         assertThat(responseBody).isNotNull
+
+        // and : all application fields are correct
         responseBody?.let { assertAllLoanApplicationFields(responseBody, loanApplicationRequest, clientRequest) }
     }
 

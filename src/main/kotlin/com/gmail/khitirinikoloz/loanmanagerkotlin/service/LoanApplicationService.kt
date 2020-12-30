@@ -29,8 +29,8 @@ class LoanApplicationService(private val repository: LoanApplicationRepository, 
                 ?: throw EntityNotFoundException("Could not create loan. Client does not exist")
 
         val application = createLoanApplicationRequest.toLoanApplicationEntity(client)
-        application.score = generateScore(application.client)
-        application.status = generateStatus(checkNotNull(application.score))
+        application.score = calculateScore(application.client)
+        application.status = resolveStatus(checkNotNull(application.score))
         return repository.save(application).toLoanApplicationResponse()
     }
 
@@ -67,7 +67,7 @@ class LoanApplicationService(private val repository: LoanApplicationRepository, 
                     ?: throw EntityNotFoundException("Loan application not found for given id $id")
     )
 
-    private fun generateStatus(score: BigDecimal): LoanStatus {
+    private fun resolveStatus(score: BigDecimal): LoanStatus {
         return when {
             score < BigDecimal.valueOf(2500) -> LoanStatus.REJECTED
             score > BigDecimal.valueOf(3500) -> LoanStatus.APPROVED
@@ -75,7 +75,7 @@ class LoanApplicationService(private val repository: LoanApplicationRepository, 
         }
     }
 
-    private fun generateScore(client: Client): BigDecimal {
+    private fun calculateScore(client: Client): BigDecimal {
         val index = AtomicInteger(1)
         val alphabet = ('a'..'z').associateWith { index.getAndIncrement() }
         val nameCharsSum = client.firstName.toLowerCase().sumBy { alphabet[it] ?: 0 }
